@@ -1,9 +1,8 @@
 from ninja import Router
 from django.shortcuts import get_object_or_404
-from .models import Farmer
-from .schemas import RegisterSchema, LoginSchema, FarmerOut
-from .jwt import create_jwt
-
+from .models import Farmer, Plot 
+from .schemas import RegisterSchema, LoginSchema, FarmerOut ,  PlotCreateSchema, PlotOutSchema
+from .jwt import create_jwt 
 router = Router()
 
 @router.post("/register", response=FarmerOut)
@@ -49,3 +48,38 @@ def login_farmer(request, payload: LoginSchema):
             "role": farmer.role
         }
     }
+
+
+@router.post("/create", response={200: dict})
+def create_plot(request, payload: PlotCreateSchema):
+    farmer = get_object_or_404(Farmer, id=payload.farmer_id)
+
+    plot = Plot.objects.create(
+        farmer=farmer,
+        plot_name=payload.plotName,
+        description=payload.description,
+        user_provided_area=payload.userProvidedArea,
+        calculated_area_sqm=payload.calculatedAreaSqM,
+        polygon_coordinates=payload.polygonCoordinates,
+        markers=payload.markers,
+        photo_geo=payload.photoGeo,
+        photo_file=payload.photoFile,
+        status=payload.status,
+    )
+
+    return {
+        "success": True,
+        "plot_id": plot.id,
+        "message": "Plot registered successfully"
+    }
+
+
+@router.get("/list/{farmer_id}", response=list[PlotOutSchema])
+def list_plots(request, farmer_id:int):
+    farmer = get_object_or_404(Farmer, id=farmer_id)
+    return Plot.objects.filter(farmer=farmer)
+
+
+@router.get("/detail/{plot_id}", response=PlotOutSchema)
+def get_plot(request, plot_id:int):
+    return get_object_or_404(Plot, id=plot_id)
