@@ -37,3 +37,26 @@ class Plot(models.Model):
 
     def __str__(self):
         return f"{self.plot_name} ({self.farmer.mobile})"
+
+
+# Added CropCycle, HarvestEvent, ProductionHistory
+class CropCycle(models.Model):
+    plot=models.ForeignKey(Plot,on_delete=models.CASCADE,related_name="cycles")
+    crop_name=models.CharField(max_length=100)
+    area_acres=models.FloatField()
+    sowing_date=models.DateField(null=True,blank=True)
+    status=models.CharField(max_length=50,default="Growing")
+class HarvestEvent(models.Model):
+    crop_cycle=models.ForeignKey(CropCycle,on_delete=models.CASCADE,related_name="harvests")
+    harvested_on=models.DateField(auto_now_add=True)
+    harvested_area_acres=models.FloatField(null=True,blank=True)
+    harvested_qty=models.FloatField(null=True,blank=True)
+    qr_url=models.CharField(max_length=255,null=True,blank=True)
+    blockchain_tx=models.CharField(max_length=255,null=True,blank=True)
+class ProductionHistory(models.Model):
+    plot=models.ForeignKey(Plot,on_delete=models.CASCADE)
+    crop_cycle=models.OneToOneField(CropCycle,on_delete=models.CASCADE)
+    harvested_on=models.DateField()
+    final_yield=models.FloatField(null=True,blank=True)
+    qr_url=models.CharField(max_length=255)
+    blockchain_tx=models.CharField(max_length=255)
